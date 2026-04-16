@@ -1,0 +1,39 @@
+name: 💰 Hourly Interest Accrual
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Каждый час
+  workflow_dispatch:      # Ручной запуск для теста админом
+
+jobs:
+  calculate-and-commit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # Право на коммит в репозиторий
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }} # Персональный токен админа для обхода защиты веток
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Interest Calculator
+        run: python scripts/interest_calc.py
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name 'GitBank Bot'
+          git config --global user.email 'bot@gitbank.local'
+          git add wallets/
+          # Коммитим только если есть изменения
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "💰 Interest accrued for period $(date -Iminutes)"
+            git push
+          fi
