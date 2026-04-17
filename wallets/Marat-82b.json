@@ -1,0 +1,9 @@
+{
+  "username": "ваш_ник",
+  "balances": {
+    "CASH": 10000.00,
+    "GOLD": 10.0
+  },
+  "last_interest_calc": "2026-04-16T00:00:00Z",
+  "nonce": 0
+}
