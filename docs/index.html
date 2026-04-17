@@ -1,1 +1,427 @@
-Hello Bank
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>🏦 GitBank Game</title>
+    <style>
+        /* Простой стиль для мобильных. Кнопки большие, пальцем попасть легко. */
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            margin: 0;
+            padding: 16px;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        h2 {
+            margin-top: 0;
+            font-weight: 600;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        button {
+            background: #0d6efd;
+            color: white;
+            border: none;
+            padding: 16px 20px;
+            font-size: 1.2rem;
+            font-weight: 500;
+            border-radius: 60px;
+            width: 100%;
+            cursor: pointer;
+            transition: 0.2s;
+            margin: 8px 0;
+            box-shadow: 0 2px 8px rgba(13,110,253,0.3);
+        }
+        button:active {
+            background: #0b5ed7;
+            transform: scale(0.98);
+        }
+        button.secondary {
+            background: #e9ecef;
+            color: #1e293b;
+            box-shadow: none;
+        }
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 1.2rem;
+        }
+        .balance-item:last-child {
+            border-bottom: none;
+        }
+        .input-group {
+            margin: 16px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        input, select {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            box-sizing: border-box;
+            background: white;
+        }
+        .user-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+        }
+        .small-note {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 8px;
+        }
+        .error {
+            color: #dc3545;
+            background: #ffe6e6;
+            padding: 12px;
+            border-radius: 16px;
+            margin: 16px 0;
+        }
+        .success {
+            color: #0f5132;
+            background: #d1e7dd;
+            padding: 12px;
+            border-radius: 16px;
+        }
+        hr {
+            margin: 24px 0;
+            border: none;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="loginSection" class="card" style="text-align: center;">
+        <h2>🏦 GitBank</h2>
+        <p style="color: #64748b; margin-bottom: 24px;">Игровая экономика на GitHub</p>
+        <button id="loginBtn">🔐 Войти через GitHub</button>
+        <p class="small-note">Мы не храним ваши личные данные. Только ваш публичный никнейм.</p>
+    </div>
+
+    <div id="appSection" style="display: none;">
+        <!-- Профиль пользователя -->
+        <div class="card">
+            <div class="user-header">
+                <img id="userAvatar" class="avatar" src="" alt="Avatar">
+                <div>
+                    <strong id="userName" style="font-size: 1.4rem;"></strong>
+                    <div style="color: #64748b;">@<span id="userLogin"></span></div>
+                </div>
+            </div>
+            <button id="logoutBtn" class="secondary" style="margin-top: 8px;">🚪 Выйти</button>
+        </div>
+
+        <!-- Балансы -->
+        <div class="card">
+            <h2>💰 Мои счета</h2>
+            <div id="balancesList">Загрузка...</div>
+            <p class="small-note">Проценты начисляются автоматически каждый час.</p>
+        </div>
+
+        <!-- Форма перевода -->
+        <div class="card">
+            <h2>📤 Перевод</h2>
+            <div class="input-group">
+                <label>Кому (GitHub ник)</label>
+                <input type="text" id="recipientInput" placeholder="Например: torvalds">
+            </div>
+            <div class="input-group">
+                <label>Сумма</label>
+                <input type="number" id="amountInput" placeholder="100" min="0.01" step="0.01">
+            </div>
+            <div class="input-group">
+                <label>Актив</label>
+                <select id="assetSelect">
+                    <option value="CASH">💵 CASH (базовая валюта)</option>
+                    <!-- Динамически добавим другие активы позже -->
+                </select>
+            </div>
+            <button id="sendBtn">💸 Отправить перевод</button>
+            <p id="sendStatus" class="small-note"></p>
+        </div>
+
+        <!-- Информация о системе -->
+        <div class="card">
+            <h2>ℹ️ О системе</h2>
+            <p>Ваш баланс хранится в файле <code>wallets/ваш_ник.json</code> в репозитории. Каждая транзакция — это Issue, обрабатываемый роботом.</p>
+            <p><a href="https://github.com/ваш_ник/bank-game" target="_blank">📁 Открыть репозиторий</a></p>
+            <p class="small-note">v0.1 MVP</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ========== НАСТРОЙКИ (ЗАМЕНИТЕ ЗДЕСЬ!) ==========
+    const CLIENT_ID = 'Ov23liujyR4EM3DsxSeO'; // Вставьте сюда Client ID из OAuth App
+    const REPO_OWNER = 'ваш_ник';       // Ваш логин на GitHub (например, MineBankAdmin)
+    const REPO_NAME = 'bank-game';      // Имя репозитория
+    
+    // ========== НЕ ТРОГАЙТЕ НИЖЕ, ЕСЛИ НЕ УВЕРЕНЫ ==========
+    const GITHUB_API = 'https://api.github.com';
+    let accessToken = localStorage.getItem('gitbank_token');
+    
+    // Элементы интерфейса
+    const loginSection = document.getElementById('loginSection');
+    const appSection = document.getElementById('appSection');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userNameSpan = document.getElementById('userName');
+    const userLoginSpan = document.getElementById('userLogin');
+    const userAvatar = document.getElementById('userAvatar');
+    const balancesDiv = document.getElementById('balancesList');
+    const sendBtn = document.getElementById('sendBtn');
+    const sendStatus = document.getElementById('sendStatus');
+
+    // Проверяем, есть ли токен при загрузке
+    if (accessToken) {
+        checkTokenAndLoad();
+    } else {
+        // Проверяем, не вернулись ли мы после OAuth (код в URL)
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        if (code) {
+            exchangeCodeForToken(code);
+        }
+    }
+
+    // Обработчик кнопки Входа
+    loginBtn.addEventListener('click', () => {
+        const redirectUri = window.location.origin + window.location.pathname;
+        const authUrl = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=read:user`;
+        window.location.href = authUrl;
+    });
+
+    // Выход
+    logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('gitbank_token');
+        accessToken = null;
+        showLogin();
+    });
+
+    // Обмен кода на токен (делаем через прокси, потому что Client Secret нельзя светить в браузере)
+    // Для MVP используем сервис https://corsproxy.io/ как временное решение
+    async function exchangeCodeForToken(code) {
+        showStatus('Авторизация...', 'info');
+        try {
+            // ВНИМАНИЕ: Это временное решение! В реальном проекте нужен свой микропрокси.
+            // Но для игры на 10 человек сойдет.
+            const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(`https://github.com/login/oauth/access_token`)}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    client_id: CLIENT_ID,
+                    client_secret: 'ВАШ_CLIENT_SECRET', // ВСТАВЬТЕ СЮДА СЕКРЕТ ТОЖЕ!
+                    code: code
+                })
+            });
+            
+            // Распарсить ответ от прокси
+            const text = await response.text();
+            // Простейший парсинг URL-encoded
+            const params = new URLSearchParams(text);
+            const token = params.get('access_token');
+            
+            if (token) {
+                localStorage.setItem('gitbank_token', token);
+                accessToken = token;
+                // Очистить URL от кода
+                window.history.replaceState({}, document.title, window.location.pathname);
+                loadUserData();
+            } else {
+                showStatus('Ошибка авторизации: ' + text, 'error');
+            }
+        } catch (e) {
+            showStatus('Ошибка сети при авторизации: ' + e.message, 'error');
+        }
+    }
+
+    // Проверка токена и загрузка
+    async function checkTokenAndLoad() {
+        try {
+            const userResp = await fetch(`${GITHUB_API}/user`, {
+                headers: { 'Authorization': `token ${accessToken}` }
+            });
+            if (userResp.ok) {
+                loadUserData();
+            } else {
+                // Токен недействителен
+                localStorage.removeItem('gitbank_token');
+                accessToken = null;
+                showLogin();
+            }
+        } catch (e) {
+            showStatus('Нет соединения с GitHub', 'error');
+        }
+    }
+
+    async function loadUserData() {
+        try {
+            // Получаем профиль пользователя
+            const userResp = await fetch(`${GITHUB_API}/user`, {
+                headers: { 'Authorization': `token ${accessToken}` }
+            });
+            const userData = await userResp.json();
+            
+            userNameSpan.textContent = userData.name || userData.login;
+            userLoginSpan.textContent = userData.login;
+            userAvatar.src = userData.avatar_url;
+            
+            // Загружаем балансы
+            await loadBalances(userData.login);
+            
+            showApp();
+        } catch (e) {
+            showStatus('Ошибка загрузки профиля: ' + e.message, 'error');
+        }
+    }
+
+    async function loadBalances(login) {
+        try {
+            // Пытаемся получить файл кошелька из репозитория
+            const walletResp = await fetch(`${GITHUB_API}/repos/${REPO_OWNER}/${REPO_NAME}/contents/wallets/${login}.json`, {
+                headers: { 'Authorization': `token ${accessToken}` }
+            });
+            
+            if (walletResp.ok) {
+                const fileData = await walletResp.json();
+                // Декодируем Base64 (GitHub отдает содержимое файла в base64)
+                const content = atob(fileData.content);
+                const wallet = JSON.parse(content);
+                displayBalances(wallet.balances);
+            } else if (walletResp.status === 404) {
+                // Кошелек не найден - создаем заглушку
+                balancesDiv.innerHTML = `<p>У вас пока нет счета. Напишите администратору для получения стартового CASH.</p>`;
+                // Для демонстрации покажем нулевые балансы
+                displayBalances({ CASH: 0 });
+            } else {
+                throw new Error('Ошибка получения кошелька');
+            }
+        } catch (e) {
+            balancesDiv.innerHTML = `<p>Не удалось загрузить балансы: ${e.message}</p>`;
+        }
+    }
+
+    function displayBalances(balances) {
+        if (!balances || Object.keys(balances).length === 0) {
+            balancesDiv.innerHTML = '<p>Нет активов</p>';
+            return;
+        }
+        let html = '';
+        for (const [asset, amount] of Object.entries(balances)) {
+            let emoji = '💵';
+            if (asset === 'GOLD') emoji = '🥇';
+            else if (asset === 'SILVER') emoji = '🥈';
+            html += `<div class="balance-item"><span>${emoji} ${asset}</span><strong>${Number(amount).toFixed(6)}</strong></div>`;
+        }
+        balancesDiv.innerHTML = html;
+        
+        // Обновим выпадающий список активов для перевода
+        const select = document.getElementById('assetSelect');
+        select.innerHTML = '';
+        for (const asset of Object.keys(balances)) {
+            const option = document.createElement('option');
+            option.value = asset;
+            option.textContent = asset;
+            select.appendChild(option);
+        }
+    }
+
+    // Отправка перевода
+    sendBtn.addEventListener('click', async () => {
+        const recipient = document.getElementById('recipientInput').value.trim();
+        const amount = parseFloat(document.getElementById('amountInput').value);
+        const asset = document.getElementById('assetSelect').value;
+        
+        if (!recipient || !amount || amount <= 0) {
+            sendStatus.textContent = 'Заполните все поля корректно';
+            return;
+        }
+        
+        sendBtn.disabled = true;
+        sendStatus.textContent = 'Создаем заявку на перевод...';
+        
+        try {
+            // Создаем Issue с меткой tx-request
+            const issueBody = {
+                title: `Перевод ${amount} ${asset} -> ${recipient}`,
+                body: `Автоматическая заявка на перевод.\n\n**От:** @${userLoginSpan.textContent}\n**Кому:** @${recipient}\n**Сумма:** ${amount} ${asset}\n\n/execute`,
+                labels: ['tx-request']
+            };
+            
+            const issueResp = await fetch(`${GITHUB_API}/repos/${REPO_OWNER}/${REPO_NAME}/issues`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `token ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(issueBody)
+            });
+            
+            if (issueResp.ok) {
+                const issue = await issueResp.json();
+                sendStatus.innerHTML = `✅ Заявка #${issue.number} создана. Робот обработает её в течение минуты. <a href="${issue.html_url}" target="_blank">Открыть</a>`;
+                document.getElementById('amountInput').value = '';
+            } else {
+                const err = await issueResp.json();
+                sendStatus.textContent = `❌ Ошибка: ${err.message}`;
+            }
+        } catch (e) {
+            sendStatus.textContent = `❌ Ошибка сети: ${e.message}`;
+        } finally {
+            sendBtn.disabled = false;
+        }
+    });
+
+    function showLogin() {
+        loginSection.style.display = 'block';
+        appSection.style.display = 'none';
+    }
+    
+    function showApp() {
+        loginSection.style.display = 'none';
+        appSection.style.display = 'block';
+    }
+    
+    function showStatus(msg, type) {
+        // Простейший вывод статуса на время авторизации
+        const statusDiv = document.createElement('div');
+        statusDiv.className = type === 'error' ? 'error' : 'success';
+        statusDiv.textContent = msg;
+        loginSection.appendChild(statusDiv);
+        setTimeout(() => statusDiv.remove(), 5000);
+    }
+</script>
+</body>
+</html>
