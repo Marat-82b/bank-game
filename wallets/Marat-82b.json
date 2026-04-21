@@ -1,9 +1,9 @@
 {
-  "username": "ваш_ник",
+  "username": "\u0432\u0430\u0448_\u043d\u0438\u043a",
   "balances": {
-    "CASH": 10000.00,
-    "GOLD": 10.0
+    "CASH": 10000.0,
+    "GOLD": 10.00709001
   },
-  "last_interest_calc": "2026-04-16T00:00:00Z",
-  "nonce": 0
+  "last_interest_calc": "2026-04-21T07:20:21.130089+00:00",
+  "nonce": 1
 }
