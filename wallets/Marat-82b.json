@@ -2,8 +2,8 @@
   "username": "\u0432\u0430\u0448_\u043d\u0438\u043a",
   "balances": {
     "CASH": 10000.0,
-    "GOLD": 10.00763408
+    "GOLD": 10.00775571
   },
-  "last_interest_calc": "2026-04-21T17:06:26.093002+00:00",
-  "nonce": 7
+  "last_interest_calc": "2026-04-21T19:17:27.400532+00:00",
+  "nonce": 8
 }
